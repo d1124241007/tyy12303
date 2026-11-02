@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDGs性別平權 - 闖關學習系統</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 圖標庫 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;600;700;900&family=Poppins:wght@600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .serif-title {
+            font-family: 'Noto Serif TC', serif;
+        }
+
+        /* 茅草屋微浮動與懸浮效果 */
+        .hut-card {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .hut-card:hover {
+            transform: translateY(-8px) scale(1.05);
+        }
+
+        /* 脈動光圈效果 */
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.6)); }
+            50% { filter: drop-shadow(0 0 18px rgba(245, 158, 11, 0.9)); }
+        }
+        .hut-unanswered {
+            animation: pulse-glow 2.5s infinite ease-in-out;
+        }
+
+        /* 摩天輪旋轉動畫 */
+        @keyframes spinWheel {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-wheel {
+            animation: spinWheel 35s linear infinite;
+            transform-origin: center;
+        }
+
+        /* 花朵搖擺與浮動動畫 */
+        @keyframes flowerFloat {
+            0%, 100% { transform: translateY(0) rotate(-3deg) scale(1); }
+            50% { transform: translateY(-12px) rotate(3deg) scale(1.05); }
+        }
+        .flower-btn {
+            animation: flowerFloat 3.5s ease-in-out infinite;
+            transition: filter 0.3s ease;
+        }
+        .flower-btn:hover {
+            filter: drop-shadow(0 0 15px rgba(244, 63, 94, 0.8));
+        }
+
+        /* 拖擺放卡片樣式 */
+        .draggable-item {
+            touch-action: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .draggable-item:active {
+            cursor: grabbing;
+            transform: scale(1.03);
+        }
+
+        /* 放置區 Drag Hover 效果 */
+        .drop-zone.drag-over {
+            background-color: rgba(254, 243, 199, 0.8) !important;
+            border-color: #f59e0b !important;
+            transform: scale(1.02);
+        }
+
+        /* 彈窗動畫 */
+        @keyframes modalPop {
+            0% { transform: scale(0.85); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-modal {
+            animation: modalPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* 雲朵漂浮動畫 */
+        @keyframes floatCloud {
+            0% { transform: translateX(-10%); }
+            100% { transform: translateX(110vw); }
+        }
+        .cloud-1 { animation: floatCloud 45s linear infinite; }
+        .cloud-2 { animation: floatCloud 65s linear infinite 15s; }
+
+        /* 證書 A4 橫向黃金比例與水印 */
+        .certificate-container {
+            aspect-ratio: 1.414 / 1;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 彩虹 SDGs 裝飾條 */
+        .sdg-rainbow-bar {
+            background: linear-gradient(90deg, 
+                #E5243B 0%, #DDA63A 20%, #4C9F38 40%, 
+                #FF3A21 60%, #26BDE2 80%, #DD1367 100%);
+        }
+
+        /* 動態波紋水印背景 */
+        .watermark-bg {
+            background-image: radial-gradient(circle, rgba(217, 119, 6, 0.05) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        /* 列印專用媒體查詢 (@media print) */
+        @media print {
+            body {
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .certificate-outer {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+                width: 100vw !important;
+                height: 100vh !important;
+            }
+
+            .certificate-container {
+                box-shadow: none !important;
+                border-width: 6px !important;
+                width: 100% !important;
+                height: 100% !important;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden relative">
+
+    <!-- 全局頂部導航列 Header (列印時隱藏) -->
+    <header class="no-print w-full bg-emerald-900/90 backdrop-blur-md text-white px-4 sm:px-6 py-3 fixed top-0 left-0 z-40 shadow-xl flex justify-between items-center border-b-4 border-amber-500">
+        
+        <!-- 左上方：動態頁面標題 -->
+        <div class="flex items-center space-x-3">
+            <div id="header-icon-box" class="bg-amber-400 text-emerald-950 p-2 rounded-xl font-black shadow-md flex items-center justify-center">
+                <i id="header-icon" class="fa-solid fa-venus-mars text-xl sm:text-2xl"></i>
+            </div>
+            <div>
+                <h1 id="header-title" class="text-lg sm:text-2xl font-black tracking-wide text-amber-300 drop-shadow">
+                    SDGs性別平權
+                </h1>
+                <p id="header-subtitle" class="text-xs text-emerald-200 hidden sm:block">
+                    第一關：村莊問答考驗
+                </p>
+            </div>
+        </div>
+
+        <!-- 中間：頁面快速切換分頁選單 -->
+        <nav class="hidden md:flex items-center bg-emerald-950/70 p-1 rounded-2xl border border-emerald-700/60">
+            <button onclick="switchTab('level1')" id="nav-btn-level1" class="px-4 py-1.5 rounded-xl font-bold text-xs transition duration-200 bg-amber-500 text-slate-900 shadow">
+                第一關：村莊問答
+            </button>
+            <button onclick="switchTab('level2')" id="nav-btn-level2" class="px-4 py-1.5 rounded-xl font-bold text-xs transition duration-200 text-emerald-200 hover:text-white">
+                第二關：情境題
+            </button>
+            <button onclick="switchTab('cert')" id="nav-btn-cert" class="px-4 py-1.5 rounded-xl font-bold text-xs transition duration-200 text-emerald-200 hover:text-white">
+                學習證書
+            </button>
+        </nav>
+
+        <!-- 右上方：答對題數顯示 -->
+        <div id="header-score-box" class="flex items-center space-x-2 bg-emerald-950/80 px-3.5 py-1.5 rounded-2xl border border-emerald-600 shadow-inner">
+            <i id="score-icon" class="fa-solid fa-trophy text-amber-400 text-base sm:text-xl"></i>
+            <div class="text-right">
+                <span class="text-[10px] text-emerald-300 block leading-tight">答對題數</span>
+                <span id="score-text" class="text-base sm:text-xl font-black text-amber-300">0 / 10</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ========================================================================= -->
+    <!-- 【第一關：index.html - SDGs性別平權 村莊地圖關卡】 -->
+    <!-- ========================================================================= -->
+    <section id="page-level1" class="page-section relative w-full min-h-screen pt-20 pb-8 flex-1 flex flex-col items-center justify-center px-4 max-w-7xl mx-auto">
+        <!-- 雲朵背景 -->
+        <div class="absolute inset-0 pointer-events-none overflow-hidden z-0">
+            <svg class="cloud-1 absolute top-20 left-0 w-32 opacity-80" viewBox="0 0 100 50" fill="white"><path d="M10 40 Q20 20 40 30 Q60 10 80 30 Q90 20 100 40 Z"/></svg>
+            <svg class="cloud-2 absolute top-36 left-0 w-44 opacity-70" viewBox="0 0 100 50" fill="white"><path d="M10 40 Q20 15 45 25 Q65 5 85 25 Q95 15 105 40 Z"/></svg>
+        </div>
+
+        <!-- 村莊主地圖容器 -->
+        <div class="relative w-full bg-gradient-to-b from-emerald-300 via-green-400 to-emerald-500 rounded-3xl border-8 border-amber-700/60 shadow-2xl overflow-hidden p-4 sm:p-8 min-h-[620px] flex flex-col justify-between">
+            
+            <!-- SVG 地圖背景 -->
+            <svg class="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-40" viewBox="0 0 1000 700" preserveAspectRatio="none">
+                <path d="M 100 150 Q 250 80 400 180 T 700 250 T 900 150 T 850 500 T 500 600 T 150 480 Z" fill="none" stroke="#d97706" stroke-width="35" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 100 150 Q 250 80 400 180 T 700 250 T 900 150 T 850 500 T 500 600 T 150 480 Z" fill="none" stroke="#fef3c7" stroke-width="25" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 15"/>
+                <circle cx="150" cy="100" r="25" fill="#047857"/><circle cx="820" cy="80" r="30" fill="#047857"/>
+                <circle cx="920" cy="400" r="25" fill="#047857"/><circle cx="80" cy="580" r="35" fill="#047857"/>
+            </svg>
+
+            <!-- 提示文字 -->
+            <div class="relative z-10 bg-amber-950/80 backdrop-blur text-amber-100 px-6 py-2.5 rounded-full text-center max-w-xl mx-auto border-2 border-amber-400/50 shadow-md mb-4 text-xs sm:text-base font-bold">
+                <i class="fa-solid fa-map-location-dot text-amber-300 mr-2"></i>點擊村莊內的 10 座茅草屋回答題目（答對 8 題以上可通關）
+            </div>
+
+            <!-- 10 座茅草屋網格 -->
+            <div id="huts-grid" class="relative z-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-6 my-auto py-2">
+                <!-- 由 JavaScript 動態生成 10 座房屋 -->
+            </div>
+
+            <!-- 進度條 -->
+            <div class="relative z-10 mt-4 bg-white/90 rounded-2xl p-3.5 shadow-lg border border-emerald-200">
+                <div class="flex justify-between items-center mb-1.5">
+                    <span class="text-xs font-bold text-emerald-950">解答進度</span>
+                    <span class="text-xs font-bold text-emerald-700" id="lvl1-progress-text">已完成 0 / 10 題</span>
+                </div>
+                <div class="w-full bg-gray-200 h-3.5 rounded-full overflow-hidden p-0.5 border border-gray-300">
+                    <div id="lvl1-progress-bar" class="bg-gradient-to-r from-amber-400 to-emerald-500 h-full rounded-full transition-all duration-500 w-0"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- 【第二關：level2.html - SDGs林毅峰性別平權-情境題 遊樂園關卡】 -->
+    <!-- ========================================================================= -->
+    <section id="page-level2" class="page-section hidden relative w-full h-screen pt-16 overflow-hidden flex flex-col justify-end bg-gradient-to-b from-sky-400 via-indigo-300 to-purple-400">
+        <!-- 雲朵與熱氣球裝飾 -->
+        <div class="absolute top-20 left-10 opacity-80 pointer-events-none"><i class="fa-solid fa-cloud text-white text-5xl"></i></div>
+        <div class="absolute top-32 right-16 opacity-75 pointer-events-none"><i class="fa-solid fa-cloud text-white text-6xl"></i></div>
+
+        <!-- 遊樂園景觀 SVG 背景 -->
+        <div class="absolute inset-x-0 bottom-0 h-4/5 pointer-events-none z-0">
+            <svg class="w-full h-full object-cover" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMax slice">
+                <path d="M-100 800 Q 200 450 500 800 T 1300 800 Z" fill="#818cf8" opacity="0.5"/>
+                <path d="M 100 800 Q 600 400 1200 800 Z" fill="#a7f3d0" opacity="0.6"/>
+                <path d="M -50 400 C 200 150, 300 600, 500 350 C 700 100, 850 550, 1250 250" fill="none" stroke="#f43f5e" stroke-width="8" stroke-dasharray="12 6"/>
+                <g transform="translate(200, 420)">
+                    <polygon points="0,0 -70,220 70,220" fill="#475569"/>
+                    <g class="animate-wheel">
+                        <circle cx="0" cy="0" r="130" fill="none" stroke="#f59e0b" stroke-width="8"/>
+                        <circle cx="0" cy="0" r="10" fill="#ef4444"/>
+                        <line x1="-130" y1="0" x2="130" y2="0" stroke="#fef08a" stroke-width="4"/>
+                        <line x1="0" y1="-130" x2="0" y2="130" stroke="#fef08a" stroke-width="4"/>
+                        <circle cx="130" cy="0" r="14" fill="#ec4899"/>
+                        <circle cx="-130" cy="0" r="14" fill="#3b82f6"/>
+                        <circle cx="0" cy="130" r="14" fill="#10b981"/>
+                        <circle cx="0" cy="-130" r="14" fill="#f59e0b"/>
+                    </g>
+                </g>
+                <g transform="translate(850, 360)">
+                    <rect x="0" y="80" width="160" height="160" fill="#ec4899" rx="8"/>
+                    <rect x="40" y="20" width="80" height="120" fill="#f472b6"/>
+                    <polygon points="40,20 80,-40 120,20" fill="#ef4444"/>
+                </g>
+                <path d="M-50 620 Q 300 580 600 620 T 1250 600 L 1250 800 L -50 800 Z" fill="#22c55e"/>
+                <path d="M-50 670 Q 400 630 800 670 T 1250 650 L 1250 800 L -50 800 Z" fill="#15803d"/>
+            </svg>
+        </div>
+
+        <!-- 引導提示語 -->
+        <div class="relative z-10 mx-auto mb-auto mt-4 bg-indigo-950/80 backdrop-blur text-white px-6 py-2 rounded-full border-2 border-amber-400 shadow-xl text-center text-xs sm:text-base font-bold">
+            <i class="fa-solid fa-seedling text-emerald-400 mr-2"></i>點擊草地上隨機分佈的 3 朵花朵，完成情境觀念歸類！
+        </div>
+
+        <!-- 3 朵隨機花朵容器 (下半部) -->
+        <div id="flower-container" class="relative z-10 w-full h-[55vh] max-w-6xl mx-auto">
+            <!-- JavaScript 動態渲染 3 朵花 -->
+        </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- 【頁面 3：certificate.html - SDGs 性別平權小達人 學習證書】 -->
+    <!-- ========================================================================= -->
+    <section id="page-cert" class="page-section hidden relative w-full min-h-screen pt-20 pb-8 flex flex-col justify-between p-4 sm:p-8">
+        
+        <!-- 操作列 (列印時隱藏) -->
+        <div class="no-print max-w-4xl w-full mx-auto mb-4 bg-white rounded-2xl p-4 shadow-md border border-slate-200">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="w-full sm:w-auto flex-1 flex items-center space-x-3">
+                    <label for="user-name-input" class="text-sm font-black text-slate-700 whitespace-nowrap flex items-center">
+                        <i class="fa-solid fa-user-pen text-amber-500 mr-2 text-base"></i>證書姓名：
+                    </label>
+                    <input 
+                        type="text" 
+                        id="user-name-input" 
+                        placeholder="請在此輸入您的姓名" 
+                        maxlength="15"
+                        class="w-full bg-slate-50 border-2 border-slate-300 focus:border-amber-500 focus:bg-white text-slate-800 font-bold px-4 py-2 rounded-xl outline-none transition text-sm sm:text-base"
+                        oninput="updateCertificateName(this.value)"
+                    >
+                </div>
+                <button 
+                    onclick="triggerPrint()" 
+                    class="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black px-6 py-2.5 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-base shrink-0"
+                >
+                    <i class="fa-solid fa-print"></i>
+                    <span>下載 / 列印證書</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 證書本體卡片 (A4 橫向比例) -->
+        <div class="certificate-outer max-w-4xl w-full mx-auto my-auto flex justify-center items-center">
+            <div class="certificate-container w-full bg-gradient-to-br from-amber-50/40 via-white to-amber-50/20 border-[10px] sm:border-[16px] border-amber-600 rounded-2xl relative p-6 sm:p-12 flex flex-col justify-between overflow-hidden watermark-bg border-double">
+                
+                <div class="sdg-rainbow-bar absolute top-0 left-0 right-0 h-2.5 sm:h-3.5"></div>
+                <div class="sdg-rainbow-bar absolute bottom-0 left-0 right-0 h-2.5 sm:h-3.5"></div>
+
+                <div class="relative z-10 text-center">
+                    <div class="inline-flex items-center space-x-2 bg-emerald-700 text-white text-[10px] sm:text-xs font-black px-3.5 py-1 rounded-full uppercase tracking-widest shadow-sm mb-1">
+                        <i class="fa-solid fa-globe"></i>
+                        <span>SDG 5 Gender Equality</span>
+                    </div>
+                    <h1 class="serif-title text-2xl sm:text-4xl font-black text-amber-950 tracking-widest mt-1">
+                        結業證明書
+                    </h1>
+                    <p class="text-[10px] sm:text-xs text-amber-700 font-bold uppercase tracking-wider">
+                        CERTIFICATE OF ACHIEVEMENT
+                    </p>
+                </div>
+
+                <div class="relative z-10 text-center my-auto py-2 sm:py-4">
+                    <p class="text-xs sm:text-sm font-semibold text-slate-600 mb-1">茲證明學員</p>
+                    <div class="my-2 min-h-[48px] sm:min-h-[56px] flex items-center justify-center">
+                        <span id="display-name" class="serif-title text-3xl sm:text-5xl font-black text-indigo-950 tracking-wider px-6 border-b-4 border-amber-500 pb-1 inline-block min-w-[200px]">
+                            林毅峰
+                        </span>
+                    </div>
+
+                    <div class="my-2 sm:my-3">
+                        <p class="text-xs font-bold text-amber-800">榮獲稱號</p>
+                        <div class="inline-block bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 text-white font-black text-base sm:text-2xl px-6 py-1.5 rounded-xl shadow-md my-1 tracking-wide">
+                            🏆 SDGs 性別平權小達人
+                        </div>
+                    </div>
+
+                    <p class="text-xs sm:text-base text-slate-700 max-w-xl mx-auto leading-relaxed font-medium px-4">
+                        參加 SDGs 性別平權主題闖關考驗，精確辨識所有性別平等與不平等情境，具備卓越之性別平等意識與包容素養，特頒此證以資鼓勵。
+                    </p>
+                </div>
+
+                <div class="relative z-10 flex justify-between items-end border-t border-amber-200/80 pt-3 sm:pt-4 px-2 sm:px-6">
+                    <div class="text-left">
+                        <p class="text-[10px] sm:text-xs text-slate-500 font-bold">發證日期 / Date</p>
+                        <p id="issue-date" class="text-xs sm:text-sm font-black text-slate-800 mt-0.5">2026 年 11 月 2 日</p>
+                        <p class="text-[9px] sm:text-[10px] text-amber-700/70 font-semibold mt-0.5">證書編號：SDG5-LYF-2026</p>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-amber-600 via-amber-400 to-yellow-200 text-amber-950 flex flex-col items-center justify-center shadow-xl border-2 border-white relative p-1">
+                            <div class="w-full h-full rounded-full border border-amber-800/40 flex flex-col items-center justify-center text-center">
+                                <i class="fa-solid fa-award text-lg sm:text-2xl text-amber-950"></i>
+                                <span class="text-[7px] sm:text-[9px] font-black uppercase tracking-tighter text-amber-950 leading-none mt-0.5">SDG 5 CHAMPION</span>
+                            </div>
+                        </div>
+                        <span class="text-[9px] sm:text-[10px] font-bold text-amber-900 mt-1">官方認證章</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- 【通用彈窗 Modals】 -->
+    <!-- ========================================================================= -->
+
+    <!-- 第一關：題目彈窗 -->
+    <div id="lvl1-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border-4 border-amber-500 relative animate-modal">
+            <button onclick="closeLvl1Modal()" class="absolute top-4 right-4 bg-gray-100 text-gray-500 hover:text-gray-800 rounded-full w-9 h-9 flex items-center justify-center">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="inline-flex items-center space-x-2 bg-amber-100 text-amber-900 font-black px-3.5 py-1 rounded-full text-xs mb-3">
+                <i class="fa-solid fa-house-chimney"></i><span id="lvl1-modal-title">茅草屋 #1</span>
+            </div>
+            <h3 id="lvl1-modal-question" class="text-base sm:text-lg font-bold text-gray-800 mb-5 leading-relaxed">題目載入中...</h3>
+            <div id="lvl1-modal-options" class="space-y-2.5 mb-5"></div>
+            <div id="lvl1-feedback" class="hidden p-3.5 rounded-2xl mb-4 font-bold text-xs flex items-center space-x-2.5"></div>
+            <button id="lvl1-btn-next" onclick="closeLvl1Modal()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-black py-3 rounded-xl shadow-lg hidden">完成本題</button>
+        </div>
+    </div>
+
+    <!-- 第一關：結算彈窗 -->
+    <div id="lvl1-result-modal" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div id="lvl1-result-card" class="bg-white rounded-3xl max-w-md w-full p-8 text-center shadow-2xl border-4 relative animate-modal">
+            <div id="lvl1-result-icon" class="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center text-4xl shadow-inner"></div>
+            <h2 id="lvl1-result-title" class="text-2xl font-black mb-2"></h2>
+            <p id="lvl1-result-desc" class="text-gray-600 mb-5 text-sm font-medium"></p>
+            <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 mb-6">
+                <span class="text-xs font-bold text-amber-800 block">最終答對題數</span>
+                <span id="lvl1-final-score" class="text-3xl font-black text-amber-600">0 / 10</span>
+            </div>
+            <div id="lvl1-result-actions" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- 第二關：情境歸類題組 Modal -->
+    <div id="lvl2-modal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border-4 border-pink-500 relative animate-modal max-h-[92vh] overflow-y-auto">
+            <button onclick="closeLvl2Modal()" class="absolute top-4 right-4 bg-gray-100 text-gray-500 hover:text-gray-800 rounded-full w-9 h-9 flex items-center justify-center">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="flex items-center space-x-3 mb-4">
+                <span id="lvl2-modal-icon" class="text-3xl">🌸</span>
+                <div>
+                    <h3 id="lvl2-modal-set-title" class="text-lg font-black text-indigo-950">花朵題組</h3>
+                    <p class="text-xs text-gray-500">請將 2 個觀念語句拖曳或點擊分配至正確分類區框</p>
+                </div>
+            </div>
+
+            <div class="bg-amber-50 p-3.5 rounded-2xl border-2 border-amber-200 mb-5">
+                <h4 class="text-xs font-bold text-amber-800 mb-2 flex items-center">
+                    <i class="fa-solid fa-hand-pointer mr-1.5 text-amber-600"></i> 請選擇語句進行拖曳或點選歸類：
+                </h4>
+                <div id="lvl2-cards-source" class="grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[80px]"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                <div id="zone-equal" data-type="equal" class="drop-zone bg-emerald-50 border-3 border-dashed border-emerald-400 rounded-2xl p-3.5 min-h-[150px] flex flex-col justify-start">
+                    <div class="flex items-center justify-between border-b border-emerald-200 pb-2 mb-2.5">
+                        <span class="font-black text-emerald-800 text-xs sm:text-sm flex items-center"><i class="fa-solid fa-scale-balanced mr-1.5 text-emerald-600"></i> 性別平等</span>
+                        <span class="text-[10px] font-bold bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded-full">正確價值觀</span>
+                    </div>
+                    <div class="drop-target-area flex-1 space-y-2"></div>
+                </div>
+
+                <div id="zone-unequal" data-type="unequal" class="drop-zone bg-rose-50 border-3 border-dashed border-rose-400 rounded-2xl p-3.5 min-h-[150px] flex flex-col justify-start">
+                    <div class="flex items-center justify-between border-b border-rose-200 pb-2 mb-2.5">
+                        <span class="font-black text-rose-800 text-xs sm:text-sm flex items-center"><i class="fa-solid fa-triangle-exclamation mr-1.5 text-rose-600"></i> 性別不平等</span>
+                        <span class="text-[10px] font-bold bg-rose-200 text-rose-800 px-2 py-0.5 rounded-full">偏見與歧視</span>
+                    </div>
+                    <div class="drop-target-area flex-1 space-y-2"></div>
+                </div>
+            </div>
+
+            <div id="lvl2-set-feedback" class="hidden p-3 rounded-xl mb-4 text-xs font-bold flex items-center space-x-2"></div>
+            <button id="lvl2-btn-submit" onclick="checkLvl2SetAnswer()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 text-white font-black py-3 rounded-xl shadow-lg">檢查答案</button>
+            <button id="lvl2-btn-close" onclick="closeLvl2Modal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-xl hidden">完成並關閉</button>
+        </div>
+    </div>
+
+    <!-- 第二關：結局等級評定 Modal (正中間顯示) -->
+    <div id="lvl2-result-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div id="lvl2-result-card" class="bg-white rounded-3xl max-w-md w-full p-8 text-center shadow-2xl border-4 relative animate-modal">
+            <div id="lvl2-result-badge" class="w-20 h-20 mx-auto mb-3 rounded-full flex items-center justify-center text-4xl shadow-xl"></div>
+            <h2 id="lvl2-result-grade-title" class="text-2xl font-black mb-1"></h2>
+            <p class="text-amber-600 font-black text-base mb-3">答對題數：<span id="lvl2-result-score">0</span> / 6 題</p>
+            <p id="lvl2-result-desc" class="text-gray-600 text-xs sm:text-sm mb-6 leading-relaxed"></p>
+            <div id="lvl2-result-actions" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 【JavaScript 核心邏輯】 -->
+    <!-- ========================================================================= -->
+    <script>
+        // -------------------------------------------------------------------------
+        // 1. 全局狀態與頁面切換控制
+        // -------------------------------------------------------------------------
+        let currentTab = 'level1';
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            document.querySelectorAll('.page-section').forEach(el => el.classList.add('hidden'));
+            
+            const target = document.getElementById(`page-${tabName}`);
+            if (target) target.classList.remove('hidden');
+
+            // 更新 Header UI 標題與按鈕
+            const hTitle = document.getElementById('header-title');
+            const hSub = document.getElementById('header-subtitle');
+            const hIcon = document.getElementById('header-icon');
+            const hScoreBox = document.getElementById('header-score-box');
+
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.className = "px-4 py-1.5 rounded-xl font-bold text-xs transition duration-200 text-emerald-200 hover:text-white";
+            });
+            const activeNav = document.getElementById(`nav-btn-${tabName}`);
+            if (activeNav) activeNav.className = "px-4 py-1.5 rounded-xl font-bold text-xs transition duration-200 bg-amber-500 text-slate-900 shadow";
+
+            if (tabName === 'level1') {
+                hTitle.innerText = "SDGs性別平權";
+                hSub.innerText = "第一關：村莊問答考驗";
+                hIcon.className = "fa-solid fa-venus-mars text-xl sm:text-2xl";
+                hScoreBox.classList.remove('hidden');
+                updateLvl1UI();
+            } else if (tabName === 'level2') {
+                hTitle.innerText = "SDGs林毅峰性別平權-情境題";
+                hSub.innerText = "第二關：遊樂園情境歸類";
+                hIcon.className = "fa-solid fa-ferris-wheel text-xl sm:text-2xl";
+                hScoreBox.classList.remove('hidden');
+                updateLvl2ScoreUI();
+            } else if (tabName === 'cert') {
+                hTitle.innerText = "SDGs 性別平權小達人";
+                hSub.innerText = "第三頁：學習證明書";
+                hIcon.className = "fa-solid fa-award text-xl sm:text-2xl";
+                hScoreBox.classList.add('hidden');
+            }
+        }
+
+        // -------------------------------------------------------------------------
+        // 2. 第一關（index.html）邏輯：10 題村莊問答
+        // -------------------------------------------------------------------------
+        const lvl1Questions = [
+            { question: "聯合國永續發展目標 (SDGs) 中，第幾項目標專注於「實現性別平等及增進婦女權益」？", options: ["SDG 3", "SDG 5", "SDG 8", "SDG 10"], answer: 1, explanation: "SDG 5 旨在實現性別平等，消除對女性與女孩的所有形式歧視與暴力。" },
+            { question: "「同工同酬」是指在做相同價值工作時，薪資不因性別而有所差異。這項原則符合哪種理念？", options: ["同理心哲學", "性別工作平等", "能力導向論", "企業福利化"], answer: 1, explanation: "同工同酬是促進職業性別平等的重要指標。" },
+            { question: "下列哪一種行為屬於破除「性別刻板印象」的展現？", options: ["認為男生不能哭泣、必須勇敢", "鼓勵男生選擇護理系，女生選擇機械工程", "認為女生必須負責家務與煮飯", "限制女性參與體育競賽"], answer: 1, explanation: "打破傳統職業的性別限制，讓每個人依興趣發展就是破除刻板印象。" },
+            { question: "關於「育嬰留職停薪」（育嬰假），正確的觀念是什麼？", options: ["只有媽媽可以申請", "爸爸與媽媽都可以申請照顧幼兒", "申請後將永遠無法回到公司工作", "只有單親家庭可以申請"], answer: 1, explanation: "性別平等推動父母雙方共同分擔撫養孩子的責任與權利。" },
+            { question: "在公共空間設置「無性別廁所」（通用廁所）的主要目的為何？", options: ["節省建材成本", "提供更多友善、安全且不受性別限制的空間", "減少清潔工人的工作量", "僅供特定身分者使用"], answer: 1, explanation: "無性別廁所能照顧多元性別者與親子照護需求。" },
+            { question: "當在職場或學校遇到性騷擾時，下列何者是最適當的處理管道？", options: ["忍氣吞聲並自行隱忍", "向申訴管道（如性平會或專線）提出申訴尋求協助", "隨意在網路上散佈流言", "立刻輟學或離職"], answer: 1, explanation: "應透過正式性騷擾申訴機制保障個人權益。" },
+            { question: "「家務分擔」在現代家庭中應該如何運作才符合性別平權？", options: ["全由女性負責", "全由男性負責", "依據家庭成員的時間與能力共同分擔與溝通", "只交給小孩做"], answer: 2, explanation: "家務不應由特定性別單獨承擔，應由家庭成員共同分擔。" },
+            { question: "推動「女性參與科技與工程領域 (STEM)」是為了達到什麼目的？", options: ["消除科技領域中的性別偏見與失衡", "限制男性從事科技產業", "降低科技業的薪資水平", "增加科技產品粉紅外觀"], answer: 0, explanation: "促進多元性別參與 STEM 領域有助於創新與實現機會均等。" },
+            { question: "下列何者屬於對性別尊重的良好溝通習慣？", options: ["使用性別歧視或貶低性別的玩笑", "尊重每個人的性別認同與稱謂偏好", "根據對方的性別評斷能力強弱", "強迫他人接受傳統性別角色"], answer: 1, explanation: "尊重的溝通建立在理解與不輕易評價他人性別認同的基礎上。" },
+            { question: "「全球性別差距報告」主要評估哪些領域的性別平等現況？", options: ["僅評估體育賽事表現", "經濟參與、教育程度、健康與生存、政治參與", "僅評估流行時裝趨勢", "飲食習慣與休閒娛樂"], answer: 1, explanation: "世界經濟論壇從經濟、教育、健康與政治四大面向綜合評估性別平等。" }
+        ];
+
+        let lvl1Answered = new Array(10).fill(null);
+        let lvl1Score = 0;
+        let lvl1CurrentHut = null;
+
+        function initLvl1Map() {
+            const grid = document.getElementById('huts-grid');
+            grid.innerHTML = '';
+
+            lvl1Questions.forEach((q, idx) => {
+                const hut = document.createElement('div');
+                let badge = '';
+                let styleClass = 'hut-unanswered opacity-100 border-amber-500 bg-amber-100/90';
+
+                if (lvl1Answered[idx] === true) {
+                    badge = `<div class="absolute -top-2 -right-2 bg-emerald-500 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs"><i class="fa-solid fa-check"></i></div>`;
+                    styleClass = 'opacity-90 border-emerald-500 bg-emerald-50';
+                } else if (lvl1Answered[idx] === false) {
+                    badge = `<div class="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs"><i class="fa-solid fa-xmark"></i></div>`;
+                    styleClass = 'opacity-90 border-rose-400 bg-rose-50';
+                }
+
+                hut.className = `hut-card cursor-pointer flex flex-col items-center justify-center p-2.5 rounded-2xl border-2 shadow-md relative group ${styleClass}`;
+                hut.onclick = () => openLvl1Modal(idx);
+
+                hut.innerHTML = `
+                    ${badge}
+                    <svg class="w-14 h-14 sm:w-16 sm:h-16 drop-shadow-md transition-transform group-hover:scale-110" viewBox="0 0 100 100">
+                        <polygon points="50,10 10,50 90,50" fill="#d97706" stroke="#78350f" stroke-width="3"/>
+                        <rect x="20" y="50" width="60" height="40" fill="#fef3c7" stroke="#78350f" stroke-width="3" rx="4"/>
+                        <rect x="42" y="65" width="16" height="25" fill="#92400e" rx="2"/>
+                        <rect x="27" y="60" width="10" height="10" fill="#38bdf8" stroke="#78350f" stroke-width="1.5"/>
+                        <rect x="63" y="60" width="10" height="10" fill="#38bdf8" stroke="#78350f" stroke-width="1.5"/>
+                    </svg>
+                    <span class="mt-1.5 text-[11px] font-black text-amber-950 bg-amber-200 px-2 py-0.5 rounded-full border border-amber-400">
+                        茅草屋 #${idx + 1}
+                    </span>
+                `;
+                grid.appendChild(hut);
+            });
+
+            updateLvl1UI();
+        }
+
+        function openLvl1Modal(index) {
+            lvl1CurrentHut = index;
+            const q = lvl1Questions[index];
+            document.getElementById('lvl1-modal-title').innerText = `茅草屋 #${index + 1}`;
+            document.getElementById('lvl1-modal-question').innerText = q.question;
+
+            const opts = document.getElementById('lvl1-modal-options');
+            opts.innerHTML = '';
+            const isAnswered = lvl1Answered[index] !== null;
+
+            q.options.forEach((opt, optIdx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-3 rounded-xl font-bold border-2 transition duration-200 text-xs sm:text-sm flex items-center justify-between ";
+                if (!isAnswered) {
+                    btn.className += "border-gray-200 bg-gray-50 hover:bg-amber-50 hover:border-amber-400 text-gray-700";
+                    btn.onclick = () => checkLvl1Answer(optIdx);
+                } else {
+                    btn.disabled = true;
+                    if (optIdx === q.answer) btn.className += "border-emerald-500 bg-emerald-50 text-emerald-800";
+                    else btn.className += "border-gray-200 bg-gray-100 opacity-60 text-gray-500";
+                }
+                btn.innerHTML = `<span>${String.fromCharCode(65 + optIdx)}. ${opt}</span><i class="fa-regular fa-circle text-gray-400"></i>`;
+                opts.appendChild(btn);
+            });
+
+            const fb = document.getElementById('lvl1-feedback');
+            const btnNext = document.getElementById('lvl1-btn-next');
+
+            if (isAnswered) {
+                fb.classList.remove('hidden');
+                btnNext.classList.remove('hidden');
+                const isCorrect = lvl1Answered[index];
+                fb.className = `p-3.5 rounded-2xl mb-4 font-bold text-xs flex items-center space-x-2.5 ${isCorrect ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-rose-100 text-rose-900 border border-rose-300'}`;
+                fb.innerHTML = `<i class="fa-solid ${isCorrect ? 'fa-circle-check text-emerald-600' : 'fa-circle-xmark text-rose-600'} text-xl"></i><span>${isCorrect ? '答對了！' : '答錯囉！'}${q.explanation}</span>`;
+            } else {
+                fb.classList.add('hidden');
+                btnNext.classList.add('hidden');
+            }
+
+            document.getElementById('lvl1-modal').classList.remove('hidden');
+        }
+
+        function checkLvl1Answer(optIdx) {
+            if (lvl1Answered[lvl1CurrentHut] !== null) return;
+            const q = lvl1Questions[lvl1CurrentHut];
+            const isCorrect = (optIdx === q.answer);
+            lvl1Answered[lvl1CurrentHut] = isCorrect;
+            if (isCorrect) lvl1Score++;
+
+            initLvl1Map();
+            openLvl1Modal(lvl1CurrentHut);
+        }
+
+        function closeLvl1Modal() {
+            document.getElementById('lvl1-modal').classList.add('hidden');
+            const count = lvl1Answered.filter(a => a !== null).length;
+            if (count === 10) {
+                setTimeout(showLvl1ResultModal, 400);
+            }
+        }
+
+        function updateLvl1UI() {
+            if (currentTab === 'level1') {
+                document.getElementById('score-text').innerText = `${lvl1Score} / 10`;
+            }
+            const count = lvl1Answered.filter(a => a !== null).length;
+            document.getElementById('lvl1-progress-text').innerText = `已完成 ${count} / 10 題`;
+            document.getElementById('lvl1-progress-bar').style.width = `${(count / 10) * 100}%`;
+        }
+
+        function showLvl1ResultModal() {
+            const card = document.getElementById('lvl1-result-card');
+            const icon = document.getElementById('lvl1-result-icon');
+            const title = document.getElementById('lvl1-result-title');
+            const desc = document.getElementById('lvl1-result-desc');
+            const actions = document.getElementById('lvl1-result-actions');
+            document.getElementById('lvl1-final-score').innerText = `${lvl1Score} / 10`;
+
+            if (lvl1Score >= 8) {
+                card.className = "bg-white rounded-3xl max-w-md w-full p-8 text-center shadow-2xl border-4 border-emerald-500 relative animate-modal";
+                icon.className = "w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center text-4xl bg-emerald-100 text-emerald-600 shadow-inner";
+                icon.innerHTML = `<i class="fa-solid fa-trophy"></i>`;
+                title.className = "text-2xl font-black text-emerald-800 mb-2";
+                title.innerText = "恭喜通關第一關！";
+                desc.innerText = "太棒了！您成功答對了 8 題以上，展現出優異的性別平權基礎！";
+                actions.innerHTML = `
+                    <button onclick="resetLvl1AndGoNext()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-2xl shadow-xl transition flex items-center justify-center space-x-2 text-base">
+                        <span>前往下一關（遊樂園情境題）</span><i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                `;
+            } else {
+                card.className = "bg-white rounded-3xl max-w-md w-full p-8 text-center shadow-2xl border-4 border-rose-500 relative animate-modal";
+                icon.className = "w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center text-4xl bg-rose-100 text-rose-600 shadow-inner";
+                icon.innerHTML = `<i class="fa-solid fa-rotate-right"></i>`;
+                title.className = "text-2xl font-black text-rose-800 mb-2";
+                title.innerText = "挑戰失敗！";
+                desc.innerText = "答對題數未達 8 題目標，請點擊下方按鈕重新挑戰第一關！";
+                actions.innerHTML = `
+                    <button onclick="resetLvl1()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-black py-3.5 rounded-2xl shadow-xl transition flex items-center justify-center space-x-2 text-base">
+                        <i class="fa-solid fa-arrows-rotate"></i><span>重新挑戰第一關</span>
+                    </button>
+                `;
+            }
+            document.getElementById('lvl1-result-modal').classList.remove('hidden');
+        }
+
+        function resetLvl1() {
+            lvl1Answered = new Array(10).fill(null);
+            lvl1Score = 0;
+            document.getElementById('lvl1-result-modal').classList.add('hidden');
+            initLvl1Map();
+        }
+
+        function resetLvl1AndGoNext() {
+            document.getElementById('lvl1-result-modal').classList.add('hidden');
+            switchTab('level2');
+        }
+
+        // -------------------------------------------------------------------------
+        // 3. 第二關（level2.html）邏輯：6 題遊樂園花朵拖曳情境
+        // -------------------------------------------------------------------------
+        const lvl2FlowerSets = [
+            {
+                setId: 0, flowerName: "粉紅櫻花", icon: "🌸",
+                items: [
+                    { id: "q1", text: "爸爸週末主動分擔煮飯與洗碗等家務勞動", target: "equal" },
+                    { id: "q2", text: "認為女生邏輯不好，不適合就讀資工系", target: "unequal" }
+                ]
+            },
+            {
+                setId: 1, flowerName: "黃金向日葵", icon: "🌻",
+                items: [
+                    { id: "q3", text: "公司不論男女同工同酬，晉升看能力表現", target: "equal" },
+                    { id: "q4", text: "面試時要求女性求職者承諾兩年內不懷孕", target: "unequal" }
+                ]
+            },
+            {
+                setId: 2, flowerName: "藍色鬱金香", icon: "🌷",
+                items: [
+                    { id: "q5", text: "學校鼓勵男生參加家政社，女生參加機器人社", target: "equal" },
+                    { id: "q6", text: "嘲笑哭泣的男同學「像女生一樣軟弱」", target: "unequal" }
+                ]
+            }
+        ];
+
+        let lvl2SetResults = [null, null, null];
+        let lvl2Placements = {};
+        let lvl2CurrentSet = null;
+        let lvl2SelectedCardId = null;
+
+        function renderLvl2Flowers() {
+            const container = document.getElementById('flower-container');
+            container.innerHTML = '';
+            const positions = [
+                { left: 15, top: 40 },
+                { left: 50, top: 20 },
+                { left: 78, top: 55 }
+            ];
+
+            lvl2FlowerSets.forEach((set, idx) => {
+                const pos = positions[idx];
+                const randomX = pos.left + (Math.random() * 6 - 3);
+                const randomY = pos.top + (Math.random() * 8 - 4);
+
+                const flower = document.createElement('div');
+                flower.className = `flower-btn absolute cursor-pointer flex flex-col items-center justify-center p-3 rounded-full bg-white/40 backdrop-blur border-2 border-white/80 shadow-2xl`;
+                flower.style.left = `${randomX}%`;
+                flower.style.top = `${randomY}%`;
+
+                let badge = '';
+                if (lvl2SetResults[idx] !== null) {
+                    badge = `<span class="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center font-black"><i class="fa-solid fa-check"></i></span>`;
+                }
+
+                flower.onclick = () => openLvl2Modal(idx);
+                flower.innerHTML = `
+                    ${badge}
+                    <span class="text-5xl sm:text-6xl drop-shadow-lg">${set.icon}</span>
+                    <span class="mt-1 bg-indigo-950/80 text-amber-300 text-[11px] font-black px-2.5 py-0.5 rounded-full border border-amber-400/50 whitespace-nowrap">
+                        ${set.flowerName}
+                    </span>
+                `;
+                container.appendChild(flower);
+            });
+            updateLvl2ScoreUI();
+        }
+
+        function openLvl2Modal(setIdx) {
+            lvl2CurrentSet = setIdx;
+            const set = lvl2FlowerSets[setIdx];
+            document.getElementById('lvl2-modal-icon').innerText = set.icon;
+            document.getElementById('lvl2-modal-set-title').innerText = `${set.flowerName} - 情境題組`;
+
+            const source = document.getElementById('lvl2-cards-source');
+            const tEqual = document.querySelector('#zone-equal .drop-target-area');
+            const tUnequal = document.querySelector('#zone-unequal .drop-target-area');
+            source.innerHTML = ''; tEqual.innerHTML = ''; tUnequal.innerHTML = '';
+            document.getElementById('lvl2-set-feedback').classList.add('hidden');
+
+            const isCompleted = lvl2SetResults[setIdx] !== null;
+
+            set.items.forEach(item => {
+                const card = createDraggableCard(item, isCompleted);
+                const pos = lvl2Placements[item.id];
+                if (pos === 'equal') tEqual.appendChild(card);
+                else if (pos === 'unequal') tUnequal.appendChild(card);
+                else source.appendChild(card);
+            });
+
+            if (isCompleted) {
+                document.getElementById('lvl2-btn-submit').classList.add('hidden');
+                document.getElementById('lvl2-btn-close').classList.remove('hidden');
+            } else {
+                document.getElementById('lvl2-btn-submit').classList.remove('hidden');
+                document.getElementById('lvl2-btn-close').classList.add('hidden');
+            }
+
+            document.getElementById('lvl2-modal').classList.remove('hidden');
+        }
+
+        function createDraggableCard(item, isDisabled) {
+            const card = document.createElement('div');
+            card.id = `card-${item.id}`;
+            card.className = `draggable-item p-3 rounded-xl bg-white border-2 border-indigo-200 shadow-sm cursor-grab flex items-center justify-between text-xs sm:text-sm font-bold text-gray-800 ${isDisabled ? 'opacity-80 cursor-default' : 'hover:border-indigo-400'}`;
+            card.draggable = !isDisabled;
+            card.innerHTML = `<span>${item.text}</span><i class="fa-solid fa-grip-vertical text-gray-300 ml-2"></i>`;
+
+            if (!isDisabled) {
+                card.ondragstart = (e) => {
+                    e.dataTransfer.setData('text/plain', item.id);
+                    card.classList.add('opacity-50');
+                };
+                card.ondragend = () => card.classList.remove('opacity-50');
+                card.onclick = () => {
+                    if (lvl2SetResults[lvl2CurrentSet] !== null) return;
+                    lvl2SelectedCardId = item.id;
+                    document.querySelectorAll('.draggable-item').forEach(el => el.classList.remove('ring-4', 'ring-amber-400'));
+                    card.classList.add('ring-4', 'ring-amber-400');
+                };
+            }
+            return card;
+        }
+
+        function setupDropZones() {
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.ondragover = (e) => { e.preventDefault(); zone.classList.add('drag-over'); };
+                zone.ondragleave = () => zone.classList.remove('drag-over');
+                zone.ondrop = (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('drag-over');
+                    const itemId = e.dataTransfer.getData('text/plain');
+                    if (itemId) assignCardToZone(itemId, zone.dataset.type);
+                };
+                zone.onclick = (e) => {
+                    if (lvl2SelectedCardId && e.target.closest('.drop-zone')) {
+                        assignCardToZone(lvl2SelectedCardId, zone.dataset.type);
+                        lvl2SelectedCardId = null;
+                        document.querySelectorAll('.draggable-item').forEach(el => el.classList.remove('ring-4', 'ring-amber-400'));
+                    }
+                };
+            });
+        }
+
+        function assignCardToZone(itemId, zoneType) {
+            lvl2Placements[itemId] = zoneType;
+            const cardEl = document.getElementById(`card-${itemId}`);
+            if (!cardEl) return;
+            const target = zoneType === 'equal' ? document.querySelector('#zone-equal .drop-target-area') : (zoneType === 'unequal' ? document.querySelector('#zone-unequal .drop-target-area') : document.getElementById('lvl2-cards-source'));
+            target.appendChild(cardEl);
+        }
+
+        function checkLvl2SetAnswer() {
+            const set = lvl2FlowerSets[lvl2CurrentSet];
+            const unplaced = set.items.filter(item => !lvl2Placements[item.id]);
+            const fb = document.getElementById('lvl2-set-feedback');
+
+            if (unplaced.length > 0) {
+                fb.className = "p-3 rounded-xl mb-4 text-xs font-bold flex items-center space-x-2 bg-amber-100 text-amber-900 border border-amber-300";
+                fb.innerHTML = `<i class="fa-solid fa-circle-exclamation text-amber-600"></i><span>請將上方 2 個語句皆拖曳放置到框框中！</span>`;
+                fb.classList.remove('hidden');
+                return;
+            }
+
+            let correct = 0;
+            set.items.forEach(item => {
+                if (lvl2Placements[item.id] === item.target) correct++;
+            });
+
+            lvl2SetResults[lvl2CurrentSet] = correct;
+            renderLvl2Flowers();
+
+            fb.className = "p-3 rounded-xl mb-4 text-xs font-bold flex items-center space-x-2 bg-emerald-100 text-emerald-900 border border-emerald-300";
+            fb.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i><span>作答完成！本題組答對 ${correct} / 2 題</span>`;
+            fb.classList.remove('hidden');
+
+            document.getElementById('lvl2-btn-submit').classList.add('hidden');
+            document.getElementById('lvl2-btn-close').classList.remove('hidden');
+        }
+
+        function closeLvl2Modal() {
+            document.getElementById('lvl2-modal').classList.add('hidden');
+            const finished = lvl2SetResults.filter(r => r !== null).length;
+            if (finished === 3) {
+                setTimeout(showLvl2ResultModal, 400);
+            }
+        }
+
+        function getLvl2TotalScore() {
+            let total = 0;
+            lvl2SetResults.forEach(r => { if (r !== null) total += r; });
+            return total;
+        }
+
+        function updateLvl2ScoreUI() {
+            if (currentTab === 'level2') {
+                document.getElementById('score-text').innerText = `${getLvl2TotalScore()} / 6`;
+            }
+        }
+
+        function showLvl2ResultModal() {
+            const totalScore = getLvl2TotalScore();
+            const card = document.getElementById('lvl2-result-card');
+            const badge = document.getElementById('lvl2-result-badge');
+            const title = document.getElementById('lvl2-result-grade-title');
+            const desc = document.getElementById('lvl2-result-desc');
+            const actions = document.getElementById('lvl2-result-actions');
+
+            document.getElementById('lvl2-result-score').innerText = totalScore;
+
+            if (totalScore <= 3) {
+                card.className = "bg-white rounded-3xl max-w-md w-full p-8 text-center shadow-2xl border-4 border-rose-500 relative animate-modal";
+                badge.className = "w-20 h-20 mx-auto mb-3 rounded-full flex items-center justify-center text-4xl bg-rose-100 text-rose-600 shadow-xl";
+                badge.innerHTML = `<i class="fa-solid fa-heart-crack"></i>`;
+                title.className = "text-2xl font-black text-rose-700 mb-1";
+                title.innerText = "評級：再加油";
+                desc.innerText = "對於性別平權與情境辨識還需要多加練習喔！別挫折，點擊下方按鈕再次挑戰！";
+                actions.innerHTML = `
+                    <button onclick="resetLvl2()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-black py-3.5 rounded-2xl shadow-xl transition flex items-center justify-center space-x-2 text-base">
+                        <i class="fa-solid fa-rotate-right"></i><span>再次挑戰第二關</span>
+                    </button>
+                `;
+            } else if (totalScore === 4 || totalScore === 5) {
+                card.className = "bg-white rounded-3xl max-w-md w-full p-8 text-center shadow-2xl border-4 border-amber-500 relative animate-modal";
+                badge.className = "w-20 h-20 mx-auto mb-3 rounded-full flex items-center justify-center text-4xl bg-amber-100 text-amber-600 shadow-xl";
+                badge.innerHTML = `<i class="fa-solid fa-chart-line"></i>`;
+                title.className = "text-2xl font-black text-amber-700 mb-1";
+                title.innerText = "評級：進步中";
+                desc.innerText = "表現很不錯！已經掌握大部分性別平權觀念囉，再試一次衝刺滿分吧！";
+                actions.innerHTML = `
+                    <button onclick="resetLvl2()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-black py-3.5 rounded-2xl shadow-xl transition flex items-center justify-center space-x-2 text-base">
+                        <i class="fa-solid fa-rotate-right"></i><span>再次挑戰第二關</span>
+                    </button>
+                `;
+            } else {
+                card.className = "bg-white rounded-3xl max-w-md w-full p-8 text-center shadow-2xl border-4 border-emerald-500 relative animate-modal";
+                badge.className = "w-20 h-20 mx-auto mb-3 rounded-full flex items-center justify-center text-4xl bg-emerald-100 text-emerald-600 shadow-xl";
+                badge.innerHTML = `<i class="fa-solid fa-trophy"></i>`;
+                title.className = "text-2xl font-black text-emerald-800 mb-1";
+                title.innerText = "評級：平權達人";
+                desc.innerText = "太完美了！您完全掌握了 SDGs 性別平等核心價值，獲得榮譽「平權達人」學習證書！";
+                actions.innerHTML = `
+                    <button onclick="goToCertPage()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-2xl shadow-xl transition flex items-center justify-center space-x-2 text-base">
+                        <i class="fa-solid fa-award"></i><span>下載學習證書</span>
+                    </button>
+                `;
+            }
+
+            document.getElementById('lvl2-result-modal').classList.remove('hidden');
+        }
+
+        function resetLvl2() {
+            lvl2SetResults = [null, null, null];
+            lvl2Placements = {};
+            document.getElementById('lvl2-result-modal').classList.add('hidden');
+            renderLvl2Flowers();
+        }
+
+        function goToCertPage() {
+            document.getElementById('lvl2-result-modal').classList.add('hidden');
+            switchTab('cert');
+        }
+
+        // -------------------------------------------------------------------------
+        // 4. 第三頁（certificate.html）邏輯：學習證書與列印
+        // -------------------------------------------------------------------------
+        function updateCertificateName(name) {
+            const display = document.getElementById('display-name');
+            const trimmed = name.trim();
+            if (trimmed === '') {
+                display.innerText = '請輸入姓名';
+                display.classList.add('text-slate-300', 'italic');
+                display.classList.remove('text-indigo-950');
+            } else {
+                display.innerText = trimmed;
+                display.classList.remove('text-slate-300', 'italic');
+                display.classList.add('text-indigo-950');
+            }
+        }
+
+        function triggerPrint() {
+            const val = document.getElementById('user-name-input').value.trim();
+            if (val === '') {
+                if (!confirm('您尚未輸入姓名，確定要直接列印證書嗎？')) {
+                    document.getElementById('user-name-input').focus();
+                    return;
+                }
+            }
+            window.print();
+        }
+
+        // -------------------------------------------------------------------------
+        // 初始化載入
+        // -------------------------------------------------------------------------
+        window.onload = function() {
+            initLvl1Map();
+            renderLvl2Flowers();
+            setupDropZones();
+
+            // 設置證書日期
+            const today = new Date();
+            document.getElementById('issue-date').innerText = `${today.getFullYear()} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
+            
+            // 預設帶入林毅峰
+            document.getElementById('user-name-input').value = '林毅峰';
+            updateCertificateName('林毅峰');
+        };
+    </script>
+</body>
+</html>
